@@ -1,17 +1,26 @@
 // server.js
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
-require('dotenv').config();
+require('dotenv').config(); // Load environment variables
 
 const app = express();
 
+// CORS Configuration
+const corsOptions = {
+  origin: 'https://your-frontend-domain.netlify.app', // Replace with your Netlify frontend URL
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Middleware
 app.use(bodyParser.json());
-app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// MongoDB Connection
 const mongoURI = process.env.MONGODB_URI;
 
 mongoose.connect(mongoURI, {
@@ -21,6 +30,7 @@ mongoose.connect(mongoURI, {
 .then(() => console.log('MongoDB Atlas connected successfully'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Mongoose Schema and Model
 const scoreSchema = new mongoose.Schema({
   name: { type: String, required: true },
   mode: { type: String, enum: ['easy', 'medium', 'hard'], required: true },
@@ -32,6 +42,7 @@ scoreSchema.index({ name: 1, mode: 1 }, { unique: true });
 
 const Score = mongoose.model('Score', scoreSchema);
 
+// Routes
 app.post('/submitScore', async (req, res) => {
   const { name, mode, score } = req.body;
 
@@ -83,6 +94,7 @@ app.get('/leaderboard', async (req, res) => {
   }
 });
 
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
